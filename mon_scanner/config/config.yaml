@@ -1,0 +1,17 @@
+# Configuration du Web Vulnerability Scanner
+
+scanner:
+  target_url: ""           # L'URL cible à scanner (ex: http://example.com)
+  max_depth: 3             # Profondeur maximum du crawler
+  threads: 5               # Nombre de threads concurents
+  timeout: 10              # Timeout pour les requêtes HTTP (en secondes)
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 WebVulnScanner/1.0"
+  
+modules:
+  sqli: true               # Activer/Désactiver le module SQLi
+  xss: true                # Activer/Désactiver le module XSS
+  csrf: true               # Activer/Désactiver le module CSRF
+
+reporting:
+  output_dir: "reports"    # Dossier de destination des rapports
+  format: "html"           # Format du rapport (html, json)

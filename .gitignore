@@ -1,0 +1,21 @@
+# Environnements Virtuels
+venv/
+env/
+.env
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.vscode/
+.idea/
+
+# Rapports générés (on ne garde pas de logs/rapports dans git)
+reports/*.html
+reports/*.json
+reports/*.csv
+reports/*.txt
+!reports/.gitkeep
+
+# macOS
+.DS_Store
