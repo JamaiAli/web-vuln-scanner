@@ -1,91 +1,91 @@
-# Professional Web Vulnerability Scanner
+# Scanner Professionnel de Vulnérabilités Web
 
-## 📖 Explanation
-This project is an automated, professional-grade Web Vulnerability Scanner built in Python. Unlike simple script-based tools, it features a complete engine that recursively crawls a target website, intelligently maps its attack surface (forms, inputs, and URL parameters), and systematically tests for common web vulnerabilities. Finally, it generates a clean, actionable HTML report detailing the findings along with remediation advice.
+## 📖 Explication
+Ce projet est un Scanner de Vulnérabilités Web professionnel et automatisé développé en Python. Contrairement aux simples outils basés sur des scripts, il dispose d'un moteur complet qui explore itérativement un site cible (crawling), géo-localise intelligemment sa surface d'attaque (formulaires, champs de saisie et paramètres d'URL), et teste systématiquement les vulnérabilités web les plus courantes. Enfin, il génère un rapport HTML clair et exploitable détaillant les résultats accompagnés de conseils de remédiation.
 
-## 🎯 The Problem This Tool Solves
-Modern web applications expose numerous endpoints, forms, and hidden parameters. Manually finding and testing every single input for vulnerabilities is a tedious, time-consuming, and error-prone process. This tool solves the problem of automated surface mapping and initial vulnerability discovery. By automating the reconnaissance and initial testing phases, it allows security professionals and developers to quickly identify weak points and focus their efforts on deeper analysis and patching.
+## 🎯 Le problème que cet outil résout
+Les applications web modernes exposent de nombreux points de terminaison, formulaires et paramètres cachés. Trouver et tester manuellement chaque entrée pour découvrir d'éventuelles vulnérabilités est un processus fastidieux, chronophage et sujet aux erreurs. Cet outil résout le problème de la cartographie automatisée de la surface d'attaque et de la découverte initiale des vulnérabilités. En automatisant les phases de reconnaissance et de tests préliminaires, il permet aux professionnels de la sécurité et aux développeurs d'identifier rapidement les points faibles et de concentrer leurs efforts sur une analyse plus approfondie et sur l'application de correctifs.
 
-## ⚙️ How It Works
-The scanner operates in four distinct phases:
-1. **Reconnaissance (Crawling):** The core engine starts at a target URL and crawls internal links recursively up to a configurable depth, maintaining session state.
-2. **Extraction:** It parses the HTML DOM of every discovered page to extract actionable components: form actions, methods, visible/hidden inputs, and URL query parameters.
-3. **Execution (Scanning):** Specialized modules process the extracted attack surface. They inject curated payloads from external dictionaries and analyze the HTTP responses to identify signatures of vulnerabilities (e.g., SQL syntax errors, reflected scripts, missing tokens).
-4. **Reporting:** Findings are sorted by severity (Critical, High, Medium, Low) and synthesized into a beautiful HTML report containing the vulnerability context, payload, and remediation instructions.
+## ⚙️ Comment ça marche
+Le scanner fonctionne selon quatre phases distinctes :
+1. **Reconnaissance (Crawling) :** Le moteur central démarre à partir d'une URL cible et parcourt itérativement les liens internes jusqu'à une profondeur paramétrable, tout en maintenant l'état de la session (cookies, etc.).
+2. **Extraction :** Il analyse le DOM HTML de chaque page découverte pour en extraire les éléments exploitables : actions et méthodes de formulaires, champs de saisie visibles ou cachés, et les paramètres des requêtes URL.
+3. **Exécution (Scanner) :** Des modules spécialisés traitent la surface d'attaque identifiée. Ils injectent des payloads soigneusement sélectionnés depuis des dictionnaires externes et analysent les réponses HTTP pour déceler les signatures de vulnérabilités (par exemple : erreurs de syntaxe SQL, scripts reflétés, absence de jetons anti-CSRF).
+4. **Génération de rapport (Reporting) :** Les découvertes sont classées en fonction de leur gravité (Critique, Haute, Moyenne, Basse) et regroupées dans un superbe rapport HTML contenant le contexte de la vulnérabilité, le payload l'ayant déclenché et les directives de remédiation à appliquer.
 
-## 💻 Technologies Used
-- **Python 3:** Core logic and orchestration.
-- **Requests:** Robust HTTP session management, handling timeouts and automatic redirections.
-- **BeautifulSoup4 (bs4):** Advanced HTML parsing and DOM querying for data extraction.
-- **Jinja2:** Templating engine for dynamic, aesthetic HTML report generation.
-- **PyYAML:** Configuration management for easy tweaking of scanner settings (threads, depth, scopes).
+## 💻 Technologies Utilisées
+- **Python 3 :** Logique centrale et orchestration.
+- **Requests :** Gestion robuste des sessions HTTP, support des timeouts et des redirections automatiques.
+- **BeautifulSoup4 (bs4) :** Parsing HTML avancé et requêtes DOM pour l'extraction intelligente des données.
+- **Jinja2 :** Moteur de templating pour la génération de rapports HTML esthétiques et dynamiques.
+- **PyYAML :** Gestion de la configuration afin d'ajuster facilement les paramètres du scanner (threads, profondeur, ciblage).
 
-## 💼 Business Value
-- **Proactive Security:** Identifies critical vulnerabilities like SQLi and XSS before malicious actors can exploit them in a production environment.
-- **Time and Cost Efficiency:** Automates repetitive manual testing processes, saving hours of security analyst time.
-- **Clear Communication:** Generates professional, human-readable reports that bridge the gap between security concepts and developer implementation, providing direct remediation instructions.
+## 💼 Valeur Business et Sécurité
+- **Sécurité Proactive :** Identifie les vulnérabilités critiques comme le SQLi et le XSS avant que les pirates informatiques ne puissent les exploiter dans un environnement de production.
+- **Efficacité en Temps et Coût :** Automatise les processus de tests manuels répétitifs, économisant ainsi des heures de travail précieuses aux analystes sécurité.
+- **Communication Claire :** Génère des rapports professionnels compréhensibles par un être humain, comblant le vide entre les concepts orientés sécurité pure et l'implémentation pour le développeur.
 
-## 🏗️ Architecture Design
+## 🏗️ Architecture Générale (Design)
 
 ```mermaid
 graph TD
-    User([User CLI / Config]) --> Orchestrator[main.py Orchestrator]
+    User([Utilisateur CLI / Config]) --> Orchestrator[Orchestrateur main.py]
     
-    subgraph Core Engine
-        Orchestrator --> Requester[HTTP Requester]
-        Requester --> Crawler[Web Crawler]
-        Crawler --> Extractor[DOM Extractor]
-        Extractor -- Yields --> AttackSurface[(Attack Surface Data)]
+    subgraph Moteur Central
+        Orchestrator --> Requester[Requêteur HTTP]
+        Requester --> Crawler[Robot d'explorations - Web Crawler]
+        Crawler --> Extractor[Extracteur DOM]
+        Extractor -- Fournit --> AttackSurface[(Données de la Surface d'Attaque)]
     end
     
-    subgraph Vulnerability Modules
-        AttackSurface --> SQLi[SQLi Engine]
-        AttackSurface --> XSS[XSS Engine]
-        AttackSurface --> CSRF[CSRF Engine]
+    subgraph Modules de Vulnérabilités
+        AttackSurface --> SQLi[Moteur SQLi]
+        AttackSurface --> XSS[Moteur XSS]
+        AttackSurface --> CSRF[Moteur CSRF]
     end
     
-    SQLi -- Scan Results --> Reporter[Report Generator]
-    XSS -- Scan Results --> Reporter
-    CSRF -- Scan Results --> Reporter
+    SQLi -- Résultats de Scan --> Reporter[Générateur de Rapports]
+    XSS -- Résultats de Scan --> Reporter
+    CSRF -- Résultats de Scan --> Reporter
     
-    Reporter --> ReportOut([HTML/JSON Report])
+    Reporter --> ReportOut([Rapport HTML/JSON])
 ```
 
-## 📁 Project Organisation
+## 📁 Organisation du Projet
 
 ```mermaid
 graph LR
     Root["📂 web-vuln-scanner/"] --> Scanner["📂 mon_scanner/"]
     Root --> Readme["📄 README.md"]
-    Scanner --> Main["🐍 main.py (Entry Point)"]
-    Scanner --> Config["📂 config/ (Settings)"]
+    Scanner --> Main["🐍 main.py (Point d'Entrée)"]
+    Scanner --> Config["📂 config/ (Paramétrages)"]
     Scanner --> Core["📂 core/ (Crawler, Extractor, Requester)"]
-    Scanner --> Modules["📂 modules/ (SQLi, XSS, CSRF Rules)"]
-    Scanner --> Payloads["📂 payloads/ (Injection Dictionaries)"]
-    Scanner --> Reporting["📂 reporting/ (HTML/JSON Generators)"]
-    Scanner --> Utils["📂 utils/ (Logger, Helpers)"]
+    Scanner --> Modules["📂 modules/ (Règles SQLi, XSS, CSRF)"]
+    Scanner --> Payloads["📂 payloads/ (Dictionnaires d'Injections)"]
+    Scanner --> Reporting["📂 reporting/ (Générateurs HTML/JSON)"]
+    Scanner --> Utils["📂 utils/ (Logs, Helpers)"]
 ```
 
-## 🚀 Test The Project On A PC (Windows + PowerShell)
+## 🚀 Tester le Projet sur un PC (Windows + PowerShell)
 
-Follow these steps to test the scanner on your Windows machine using PowerShell. We will test it against `http://testphp.vulnweb.com`, an application legally provided by Acunetix for security testing.
+Suivez ces différentes étapes pour tester le scanner sur votre machine Windows depuis PowerShell. Nous allons ici réaliser un test basique sur le site `http://testphp.vulnweb.com`, une application légalement mise à la disposition du public par Acunetix dans le but de s'entraîner aux tests de pénétration.
 
-### 1. Open PowerShell and navigate to the project root
+### 1. Ouvrez PowerShell et placez-vous à la racine du projet
 ```powershell
 cd C:\Users\jamai\OneDrive\Desktop\web-vuln-scanner
 ```
 
-### 2. Install the required dependencies
-*(Ensure Python is installed on your system)*
+### 2. Installez les dépendances requises
+*(Assurez-vous que Python soit bien installé et ajouté dans vos variables d'environnement)*
 ```powershell
 python -m pip install -r mon_scanner/requirements.txt
 ```
 
-### 3. Run the Vulnerability Scanner
-To run the scanner, you need to set the `PYTHONPATH` so the internal modules can resolve each other properly. Run the following command (setting depth to 1 for a quick test):
+### 3. Lancez le web scanner
+Afin de démarrer le scan, vous devrez configurer le `PYTHONPATH` de façon à ce que les modules internes de Python puissent se correspondre correctement. Exécutez la commande suivante (ici `depth` est délibérément défini sur 1 pour la vitesse du test) :
 ```powershell
 $env:PYTHONPATH = "C:\Users\jamai\OneDrive\Desktop\web-vuln-scanner"; python -m mon_scanner.main -u http://testphp.vulnweb.com -d 1
 ```
 
-### 4. View the Report
-Once the execution finishes, navigate to the `reports/` folder that was just created inside `web-vuln-scanner/`. Open the generated HTML file (e.g., `report_testphp.vulnweb.com.html`) in your favorite web browser to see the professional vulnerability report!
+### 4. Visualisez le Rapport
+Une fois que l'exécution indique la fin globale du test, rendez-vous dans le nouveau dossier `reports/` fraîchement créé à l'intérieur de `web-vuln-scanner/`. Ouvrez le fichier HTML généré (par exemple, `report_testphp.vulnweb.com.html`) dans votre navigateur préféré pour consulter votre rapport professionnel d'audit de vulnérabilité !
