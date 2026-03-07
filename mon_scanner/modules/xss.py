@@ -76,20 +76,23 @@ class XSSScanner:
                 continue
 
             for payload in self.payloads:
-                # Fuzzing XSS Stored: Création d'un payload unique visible dans les pages récap (ex: <u>test_xyz</u>)
-                unique_stored_payload = f"<u>test_{str(uuid.uuid4())[:8]}</u>"
-                
+                # Préparation des données pour tester le Reflected XSS
                 data = {}
                 for inp in inputs:
                     if inp.get("name") == input_name:
-                        # Si GET: on essaie le payload normal, Si POST, on injecte pour stocker
-                        data[inp.get("name")] = payload if method == "get" else unique_stored_payload
+                        data[inp.get("name")] = payload
                     else:
                         data[inp.get("name")] = "test"
                 
+                # Exécution de la requête pour Reflected
                 if method == "post":
                     response = self.requester.post(action, data=data)
-                    # On garde la trace de l'injection en POST
+                    
+                    # En parallèle, injection silencieuse pour le Stored XSS
+                    unique_stored_payload = f"<u>test_{str(uuid.uuid4())[:8]}</u>"
+                    data_stored = data.copy()
+                    data_stored[input_name] = unique_stored_payload
+                    self.requester.post(action, data=data_stored)
                     self.injected_stored_payloads.append({
                         "payload": unique_stored_payload,
                         "source_url": url,
@@ -98,8 +101,8 @@ class XSSScanner:
                 else:
                     response = self.requester.get(action, params=data)
                 
-                # Check Reflected only
-                if method == "get" and self.is_vulnerable(response, payload):
+                # Check Reflected (Maintenant actif pour GET ET POST)
+                if self.is_vulnerable(response, payload):
                     logger.error(f"[XSS] Reflected XSS trouvé dans {url} via le champ '{input_name}'")
                     results.append({
                         "type": "Cross-Site Scripting (Reflected)",
