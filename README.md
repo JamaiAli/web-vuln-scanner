@@ -74,21 +74,21 @@ graph LR
 
 Suivez ces différentes étapes pour tester le scanner sur votre machine Windows depuis PowerShell. Nous allons ici réaliser un test basique sur le site `http://zero.webappsecurity.com`, une application bancaire légalement mise à la disposition du public pour s'entraîner aux tests de pénétration.
 
-### 1. Ouvrez PowerShell et placez-vous à la racine du projet
-```powershell
-cd C:\Users\jamai\OneDrive\Desktop\web-vuln-scanner
+### 1. Ouvrez votre terminal et placez-vous à la racine du projet
+```bash
+cd <chemin_vers_web-vuln-scanner>
 ```
 
 ### 2. Installez les dépendances requises
 *(Assurez-vous que Python soit bien installé et ajouté dans vos variables d'environnement)*
-```powershell
+```bash
 python -m pip install -r mon_scanner/requirements.txt
 ```
 
 ### 3. Lancez le web scanner avec Authentification
-Afin de démarrer le scan, vous devrez configurer le `PYTHONPATH` de façon à ce que les modules internes de Python puissent se correspondre correctement. Exécutez la commande suivante pour amorcer une attaque de profondeur 3 sur le portail en fournissant les identifiants d'accès virtuels :
+Afin de démarrer le scan, vous devrez vous assurer que les modules internes Python se trouvent. Sur Windows par exemple, exécutez la commande suivante à la racine :
 ```powershell
-$env:PYTHONPATH = "C:\Users\jamai\OneDrive\Desktop\web-vuln-scanner"; python -m mon_scanner.main -u "http://zero.webappsecurity.com" -d 3 --login-url "http://zero.webappsecurity.com/login.html" --username "admin" --password "admin"
+$env:PYTHONPATH = "."; python -m mon_scanner.main -u "http://zero.webappsecurity.com" -d 3 --login-url "http://zero.webappsecurity.com/login.html" --username "admin" --password "admin"
 ```
 
 ### 4. Visualisez le Rapport
