@@ -35,7 +35,7 @@ Afin d'assurer une sécurité globale de l'application, ce scanner détecte acti
 - **Cross-Site Scripting (XSS) :** Une vulnérabilité permettant l'injection de scripts malveillants dans les pages web consultées par d'autres utilisateurs. Ce scanner détecte le **Reflected XSS** (désactivation immédiate) et le **Stored XSS** (le script est sauvegardé sur le serveur et affiché plus tard sur d'autres pages). Le XSS permet souvent de voler les sessions ou l'identité d'autres utilisateurs.
 - **Cross-Site Request Forgery (CSRF) :** Une attaque qui force un utilisateur final authentifié à exécuter des actions non désirées. Le scanner analyse spécifiquement les formulaires sensibles (transferts, configurations) pour s'assurer qu'ils sont protégés par un jeton unique et imprévisible (Anti-CSRF token).
 
-## 🏗️ Architecture Générale (Design)
+## Architecture Générale (Design)
 
 ```mermaid
 graph TD
@@ -62,7 +62,7 @@ graph TD
     Reporter --> ReportOut([Rapport HTML/JSON])
 ```
 
-## 📁 Organisation du Projet
+## Organisation du Projet
 
 ```mermaid
 graph LR
