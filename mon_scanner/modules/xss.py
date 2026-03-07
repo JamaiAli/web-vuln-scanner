@@ -1,11 +1,13 @@
 from mon_scanner.utils.logger import logger
 import urllib.parse
 import os
+import uuid
 
 class XSSScanner:
     def __init__(self, requester):
         self.requester = requester
         self.payloads = self._load_payloads("mon_scanner/payloads/xss.txt")
+        self.injected_stored_payloads = [] # Pour garder trace des payloads balises injectés
 
     def _load_payloads(self, filepath):
         try:
@@ -20,12 +22,11 @@ class XSSScanner:
             ]
 
     def is_vulnerable(self, response, payload):
-        """Vérifie si le payload est reflété non-échappé dans la réponse"""
+        """Vérifie si le payload est reflété non-échappé dans la réponse (Reflected XSS)"""
         if not response:
             return False
             
         content = response.text
-        # Si le payload est renvoyé tel quel, c'est potentiellement un Reflected XSS
         return payload in content
 
     def scan_url(self, url):
@@ -51,14 +52,14 @@ class XSSScanner:
                 if self.is_vulnerable(response, payload):
                     logger.error(f"[XSS] Reflected XSS trouvé sur {url} (param: {key})")
                     results.append({
-                        "type": "Cross-Site Scripting (XSS)",
+                        "type": "Cross-Site Scripting (Reflected)",
                         "severity": "Medium",
                         "url": url,
                         "parameter": key,
                         "method": "GET",
                         "payload": payload,
-                        "description": "Les données entrées sont retournées sans nettoyage au sein de la vue HTML, exposant à une exécution JavaScript.",
-                        "remediation": "Utilisez de l'encodage HTML entités (Html Entities Encoding) avant l'affichage des données."
+                        "description": "Les données entrées sont retournées sans nettoyage au sein de la vue HTML, exposant à une exécution JavaScript ciblée.",
+                        "remediation": "Utilisez un encodage HTML (Html Entities Encoding) avant l'affichage des données."
                     })
                     break 
         return results
@@ -75,29 +76,77 @@ class XSSScanner:
                 continue
 
             for payload in self.payloads:
+                # Fuzzing XSS Stored: Création d'un payload unique visible dans les pages récap (ex: <u>test_xyz</u>)
+                unique_stored_payload = f"<u>test_{str(uuid.uuid4())[:8]}</u>"
+                
                 data = {}
                 for inp in inputs:
                     if inp.get("name") == input_name:
-                        data[inp.get("name")] = payload
+                        # Si GET: on essaie le payload normal, Si POST, on injecte pour stocker
+                        data[inp.get("name")] = payload if method == "get" else unique_stored_payload
                     else:
                         data[inp.get("name")] = "test"
                 
                 if method == "post":
                     response = self.requester.post(action, data=data)
+                    # On garde la trace de l'injection en POST
+                    self.injected_stored_payloads.append({
+                        "payload": unique_stored_payload,
+                        "source_url": url,
+                        "input_name": input_name
+                    })
                 else:
                     response = self.requester.get(action, params=data)
                 
-                if self.is_vulnerable(response, payload):
-                    logger.error(f"[XSS] XSS trouvé dans {url} via le champ '{input_name}'")
+                # Check Reflected only
+                if method == "get" and self.is_vulnerable(response, payload):
+                    logger.error(f"[XSS] Reflected XSS trouvé dans {url} via le champ '{input_name}'")
                     results.append({
-                        "type": "Cross-Site Scripting (XSS)",
+                        "type": "Cross-Site Scripting (Reflected)",
                         "severity": "Medium",
                         "url": url,
                         "parameter": input_name,
                         "method": method.upper(),
                         "payload": payload,
-                        "description": "L'entrée utilisateur est affichée directement dans la page. Un attaquant peut injecter du Javascript malveillant.",
-                        "remediation": "Encodez proprement toutes les sorties web avec un encodeur sensible au contexte HTML."
+                        "description": "L'entrée utilisateur est affichée directement dans la page sans échappement.",
+                        "remediation": "Encodez proprement toutes les sorties web sensibles pour le contexte d'insertion HTML."
                     })
                     break
+        return results
+
+    def verify_stored_xss(self, crawled_urls):
+        """
+        Passe sur toutes les URL trouvées lors du crawl afin de déterminer
+        si l'un des payloads poussés en POST s'affiche sur les autres pages (XSS Persistant)
+        """
+        results = []
+        if not self.injected_stored_payloads:
+            return results
+
+        # Parcourir notamment les pages de resume (account-summary, dashboard etc.)
+        for url in crawled_urls:
+            response = self.requester.get(url)
+            if not response or 'text/html' not in response.headers.get('Content-Type', ''):
+                continue
+                
+            content = response.text
+            
+            # Vérifier la présence persistante de nos payloads (ex: <u>test_123</u>)
+            for injected in self.injected_stored_payloads:
+                if injected["payload"] in content:
+                    logger.critical(f"[XSS STORED] Vulnérabilité XSS Persistante découverte sur {url} via l'injection dans {injected['source_url']} (champ '{injected['input_name']}')")
+                    
+                    # Eviter d'enregistrer le même payload s'il apparait sur pleins de pages différentes
+                    found_payloads = [r["payload"] for r in results]
+                    if injected["payload"] not in found_payloads:
+                        results.append({
+                            "type": "Stored Cross-Site Scripting (Persistent XSS)",
+                            "severity": "Critical",
+                            "url": url,
+                            "parameter": injected['input_name'] + " (depuis " + injected['source_url'] + ")",
+                            "method": "POST",
+                            "payload": injected['payload'],
+                            "description": "Une grave vulnérabilité XSS où la donnée a été enregistrée en base de données ou en session, et est réutilisée sans nettoyage lors de l'affichage global. La balise cible s'est exécutée.",
+                            "remediation": "Encodez impérativement à la SAISIE et / ou à la SORTIE chaque valeur extraite d'une data store utilisateur."
+                        })
         return results

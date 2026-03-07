@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 from mon_scanner.core.requester import Requester
 from mon_scanner.core.crawler import Crawler
 from mon_scanner.core.extractor import Extractor
+from mon_scanner.core.auth import Authenticator
 from mon_scanner.modules.sqli import SQLiScanner
 from mon_scanner.modules.xss import XSSScanner
 from mon_scanner.modules.csrf import CSRFScanner
@@ -39,6 +40,12 @@ def main():
     parser.add_argument("-u", "--url", help="URL cible à scanner (ex: http://example.com)", required=True)
     parser.add_argument("-d", "--depth", type=int, help="Profondeur du crawl (défaut: 3)", default=3)
     parser.add_argument("-c", "--config", help="Chemin vers le fichier de config", default="mon_scanner/config/config.yaml")
+    
+    # Nouveaux arguments pour l'authentification
+    parser.add_argument("--login-url", help="URL de la page de connexion")
+    parser.add_argument("--username", help="Nom d'utilisateur pour la connexion")
+    parser.add_argument("--password", help="Mot de passe pour la connexion")
+    
     args = parser.parse_args()
 
     target_url = args.url
@@ -51,11 +58,35 @@ def main():
 
     logger.info(f"Initialisation du scanner sur la cible: {target_url}")
 
-    # 1. Initialiser le cœur
+    # 1. Initialiser le cœur (la session démarre ici)
     requester = Requester(config_path=args.config)
-    crawler = Crawler(requester, target_url, max_depth=args.depth)
     
-    # 2. Phase de Reconnaissance (Crawling)
+    # 1.5 Authentification optionnelle
+    if args.login_url and args.username and args.password:
+        auth_module = Authenticator(requester)
+        login_absolute_url = args.login_url
+        if not urlparse(args.login_url).scheme:
+            login_absolute_url = urllib.parse.urljoin(target_url, args.login_url)
+            
+        success = auth_module.login(login_absolute_url, args.username, args.password)
+        if not success:
+            logger.critical("Arrêt du scanner car l'authentification a échoué.")
+            sys.exit(1)
+            
+        # Si connecté, vérifier s'il faut forcer un crawl depuis l'index connecté pour amorcer la découverte
+        # (souvent nécessaire car la redirection du POST de login n'est pas suivie par le Crawler)
+        base_index = urllib.parse.urljoin(target_url, "/index.html")
+        logger.info(f"Pré-amorçage du crawler avec : {base_index}")
+        # On va l'ajouter au Crawler via une méthode dédiée ou en le passant
+
+    crawler = Crawler(requester, target_url, max_depth=args.depth)
+    if args.login_url and args.username and args.password:
+         crawler.to_visit.append((urllib.parse.urljoin(target_url, "/index.html"), 0))
+         crawler.to_visit.append((urllib.parse.urljoin(target_url, "/bank/account-summary.html"), 0))
+         crawler.to_visit.append((urllib.parse.urljoin(target_url, "/bank/transfer-funds.html"), 0))
+         crawler.to_visit.append((urllib.parse.urljoin(target_url, "/bank/pay-bills.html"), 0))
+    
+    # 2. Phase de Reconnaissance (Crawling) connecté
     logger.info("=== Phase 1: Reconnaissance (Crawling) ===")
     discovered_urls = crawler.crawl()
     logger.info(f"Crawl terminé. {len(discovered_urls)} URLs uniques découvertes.")
@@ -95,10 +126,16 @@ def main():
             if modules_config.get("csrf"):
                 all_vulnerabilities.extend(csrf_scanner.scan_form(url, form))
 
+    # Phase XSS Stored : Validation globale en repassant sur les pages importantes
+    if modules_config.get("xss"):
+        logger.info("--- Vérification finale du XSS Stocké ---")
+        stored_results = xss_scanner.verify_stored_xss(discovered_urls)
+        all_vulnerabilities.extend(stored_results)
+
     # 4. Phase de Reporting
     logger.info("=== Phase 3: Génération du Rapport ===")
     if not all_vulnerabilities:
-        logger.info("Félicitations, aucune vulnérabilité critique détectée !")
+        logger.info("Félicitations, aucune vulnérabilité grave détectée !")
     else:
         logger.warning(f"{len(all_vulnerabilities)} vulnérabilités potentielles ont été trouvées.")
     
