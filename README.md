@@ -1,5 +1,7 @@
 # Scanner Professionnel de Vulnérabilités Web
 
+[![Démonstration du Scanner](https://img.youtube.com/vi/RotXBkOzdBk/0.jpg)](https://youtu.be/RotXBkOzdBk)
+
 ## Explication
 Ce projet est un Scanner de Vulnérabilités Web professionnel et automatisé développé en Python. Contrairement aux simples outils basés sur des scripts, il dispose d'un moteur complet qui explore itérativement un site cible (crawling), géo-localise intelligemment sa surface d'attaque (formulaires, champs de saisie et paramètres d'URL), et teste systématiquement les vulnérabilités web les plus courantes. Enfin, il génère un rapport HTML clair et exploitable détaillant les résultats accompagnés de conseils de remédiation.
 
