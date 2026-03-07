@@ -43,9 +43,9 @@ graph TD
     end
     
     subgraph Modules de Vulnérabilités
-        AttackSurface --> SQLi[Moteur SQLi]
-        AttackSurface --> XSS[Moteur XSS (Reflected & Stored)]
-        AttackSurface --> CSRF[Moteur CSRF Stricte]
+        AttackSurface --> SQLi["Moteur SQLi"]
+        AttackSurface --> XSS["Moteur XSS (Reflected & Stored)"]
+        AttackSurface --> CSRF["Moteur CSRF Stricte"]
     end
     
     SQLi -- Résultats de Scan --> Reporter[Générateur de Rapports]
