@@ -101,4 +101,4 @@ $env:PYTHONPATH = "."; python -m mon_scanner.main -u "http://zero.webappsecurity
 ```
 
 ### 4. Visualisez le Rapport
-Une fois que l'exécution indique la fin globale du test, rendez-vous dans le nouveau dossier `reports/` fraîchement créé à l'intérieur de `web-vuln-scanner/`. Ouvrez le fichier HTML généré (par exemple, `report_zero.webappsecurity.com.html`) dans votre navigateur préféré pour consulter les découvertes de failles CSRF avancées !
+Une fois que l'exécution indique la fin globale du test, rendez-vous dans le nouveau dossier `reports/` fraîchement créé à l'intérieur de `web-vuln-scanner/`. Ouvrez le fichier HTML généré (par exemple, `report_zero.webappsecurity.com.html`) dans votre navigateur préféré pour consulter les découvertes de failles SQLi, XSS et CSRF !
